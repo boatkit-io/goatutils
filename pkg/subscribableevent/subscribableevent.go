@@ -1,3 +1,4 @@
+// Package subscribableevent is just to hold the Event structure documented below
 package subscribableevent
 
 import (
@@ -6,8 +7,11 @@ import (
 	"sync"
 )
 
+// SubscriptionId is a strongly-typed opaque token for representing a subscription, which can be passed back
+// in to unsubscrbe.
 type SubscriptionId uint
 
+// trackedSub is an internal tracking struct for a single subscription
 type trackedSub[F any] struct {
 	subId    SubscriptionId
 	callback F
@@ -15,6 +19,8 @@ type trackedSub[F any] struct {
 	callbackReflect reflect.Value
 }
 
+// Event is a simple structure allowing for generic structured event subscription -- create a strongly-typed
+// Event, and then zero or more subscribers can listen to it and/or fire messages into it.
 type Event[F any] struct {
 	subMutex  sync.Mutex
 	lastSubId SubscriptionId
@@ -22,6 +28,7 @@ type Event[F any] struct {
 	argKinds  []reflect.Kind
 }
 
+// NewEvent returns a new Event object
 func NewEvent[F any]() Event[F] {
 	// Sanity check the F type
 	var zero [0]F
@@ -43,6 +50,7 @@ func NewEvent[F any]() Event[F] {
 	}
 }
 
+// Subscribe will subscribe to any events fired from the Event object, returning a SubscriptionId for later unsubscribing (if desired).
 func (e *Event[F]) Subscribe(callback F) SubscriptionId {
 	e.subMutex.Lock()
 	defer e.subMutex.Unlock()
@@ -59,6 +67,7 @@ func (e *Event[F]) Subscribe(callback F) SubscriptionId {
 	return ts.subId
 }
 
+// Unsubscribe will unsubscribe a specific SubscriptionId from the Event's subscribed callbacks.
 func (e *Event[F]) Unsubscribe(subId SubscriptionId) error {
 	e.subMutex.Lock()
 	defer e.subMutex.Unlock()
@@ -73,6 +82,8 @@ func (e *Event[F]) Unsubscribe(subId SubscriptionId) error {
 	return nil
 }
 
+// Fire will call all of the subscribed callbacks back with the args passed, which are type-checked against the
+// type of the callbacks.
 func (e *Event[F]) Fire(args ...any) {
 	// Make a cloned list of what to call back inside the mutex, then call them back later outside the mutex, in case
 	// someone tries to mutate the subscription list in a callback.

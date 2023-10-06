@@ -13,6 +13,7 @@ import (
 	"github.com/vishvananda/netlink"
 )
 
+// Channel represents a single canbus channel for sending/receiving CAN frames
 type Channel struct {
 	bitRate        int32
 	ChannelOptions ChannelOptions
@@ -23,6 +24,8 @@ type Channel struct {
 	log *logrus.Logger
 }
 
+// NewChannel returns a Channel object based on the given options.  ChannelOptions are required settings, and then you can optionally add
+// more ChannelOption objects for various optional options.
 func NewChannel(ctx context.Context, log *logrus.Logger, ChannelOptions ChannelOptions, opts ...ChannelOption) (*Channel, error) {
 	c := Channel{
 		ChannelOptions: ChannelOptions,
@@ -44,6 +47,8 @@ func NewChannel(ctx context.Context, log *logrus.Logger, ChannelOptions ChannelO
 	return &c, nil
 }
 
+// open is an internal helper for opening the canbus channel.  This will, as needed, use netlink to actually call into the OS
+// to start the channel and/or set the bitrate, as needed.
 func (c *Channel) open(ctx context.Context) error {
 	// Referencing https://github.com/angelodlfrtr/go-can/blob/master/transports/socketcan.go
 
@@ -132,6 +137,7 @@ func (c *Channel) open(ctx context.Context) error {
 	return nil
 }
 
+// Close shuts down the channel
 func (c *Channel) Close(ctx context.Context) error {
 	if c.bus == nil {
 		return nil
@@ -145,6 +151,7 @@ func (c *Channel) Close(ctx context.Context) error {
 	return nil
 }
 
+// WriteFrame will send a CAN frame to the channel
 func (c *Channel) WriteFrame(frame can.Frame) error {
 	return c.bus.Publish(frame)
 }

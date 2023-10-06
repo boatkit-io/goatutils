@@ -2,7 +2,7 @@
 
 ## pkg/subscribableevent
 
-A simple multi-subscribable event emitter/callback-callbacker.  Call .Subscribe(callback), get a token, call .Unsubscribe() on the token when you're done.
+A simple multi-subscribable event emitter/callback-callbacker.  Call .Subscribe(callback), get a token, call .Unsubscribe() with the token when you're done.
 
 ## pkg/canbus
 
